@@ -13,6 +13,13 @@ type data struct {
 
 func biodata() {
 
+	// listData := []data{
+	// 	{Nama: "andi", Alamat: "jalan 1", Pekerjaan: "pegawai", Alasan: "belajar"},
+	// 	{Nama: "budi", Alamat: "jalan 2", Pekerjaan: "pegawai", Alasan: "belajar"},
+	// 	{Nama: "bono", Alamat: "jalan 3", Pekerjaan: "pegawai", Alasan: "belajar"},
+	// 	{Nama: "eko", Alamat: "jalan 4", Pekerjaan: "pegawai", Alasan: "belajar"},
+	// }
+
 	listData := []data{}
 
 	Data1 := data{}
