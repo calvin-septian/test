@@ -1,3 +1,3 @@
-module sample
+module training
 
 go 1.16

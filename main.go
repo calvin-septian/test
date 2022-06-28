@@ -2,35 +2,40 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"strconv"
+	"time"
+
+	"training/entity"
+	"training/helper"
+	"training/service"
 )
 
 func main() {
-	fmt.Println("Hello Word")
+	fmt.Println("Hello World!")
 
 	for i := 0; i < 10; i++ {
 		if i%2 != 0 {
-			fmt.Println("ganjil")
+			fmt.Printf("angka %d ganjil\n", i)
 		} else {
-			fmt.Println("genap")
+			fmt.Printf("angka %d genap\n", i)
 		}
 	}
 
 	name := []string{"andi", "budi", "cacing"}
 	for _, v := range name {
-		fmt.Println(v)
+		fmt.Printf("nama saya %s\n", v)
 	}
 
-	var listBiodata = []Data{
-		{Nama: "andi", Alamat: "jalan 1", Pekerjaan: "pegawai", Alasan: "belajar"},
-		{Nama: "budi", Alamat: "jalan 2", Pekerjaan: "pegawai", Alasan: "belajar"},
-		{Nama: "bono", Alamat: "jalan 3", Pekerjaan: "pegawai", Alasan: "belajar"},
-		{Nama: "eko", Alamat: "jalan 4", Pekerjaan: "pegawai", Alasan: "belajar"},
-	}
+	helper.GetBiodata()
 
-	index, _ := strconv.Atoi(os.Args[1])
-	fmt.Println(listBiodata[index])
+	userSvc := service.NewUserService()
+	userSvc.Register(&entity.User{
+		Id:        0,
+		Username:  "adi123",
+		Email:     "adi123@gmail.com",
+		Password:  "password123",
+		Age:       9,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	})
 
-	biodata()
 }
