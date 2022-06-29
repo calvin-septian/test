@@ -1,12 +1,16 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
 	"training/entity"
 	"training/helper"
 	"training/service"
+
+	"github.com/gorilla/mux"
 )
 
 func main() {
@@ -27,8 +31,25 @@ func main() {
 
 	helper.GetBiodata()
 
+	r := mux.NewRouter()
+	r.HandleFunc("/hello", hello)
+	r.HandleFunc("/register", register)
+	r.HandleFunc("/user", helper.UsersHandler)
+	r.HandleFunc("/user/{id}", helper.UsersHandler)
+	srv := &http.Server{
+		Handler: r,
+		Addr:    "127.0.0.1:8090",
+	}
+	srv.ListenAndServe()
+}
+
+func hello(w http.ResponseWriter, req *http.Request) {
+	fmt.Fprintf(w, "hello\n")
+}
+
+func register(w http.ResponseWriter, req *http.Request) {
 	userSvc := service.NewUserService()
-	userSvc.Register(&entity.User{
+	user := userSvc.Register(&entity.User{
 		Id:        0,
 		Username:  "adi123",
 		Email:     "adi123@gmail.com",
@@ -37,5 +58,7 @@ func main() {
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	})
-
+	userData, _ := json.Marshal(user)
+	w.Header().Add("Content-Type", "application/json")
+	w.Write(userData)
 }

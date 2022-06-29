@@ -7,7 +7,7 @@ import (
 )
 
 type UserServiceIface interface {
-	Register(user *entity.User)
+	Register(user *entity.User) entity.User
 }
 
 type UserSvc struct {
@@ -37,7 +37,7 @@ func NewUserService() UserServiceIface {
 	return &UserSvc{ListUser: list}
 }
 
-func (u *UserSvc) Register(user *entity.User) {
+func (u *UserSvc) Register(user *entity.User) entity.User {
 	if _, ok := u.ListUser[user.Username]; ok {
 		fmt.Println("Failed register, username already exist")
 	} else {
@@ -45,4 +45,5 @@ func (u *UserSvc) Register(user *entity.User) {
 	}
 
 	fmt.Println(user)
+	return *user
 }
