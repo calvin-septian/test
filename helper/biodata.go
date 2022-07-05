@@ -2,6 +2,8 @@ package helper
 
 import (
 	"fmt"
+	"os"
+	"strconv"
 )
 
 type Data struct {
@@ -23,6 +25,6 @@ func GetBiodata() {
 		fmt.Printf("%s %s %s %s\n", v.Nama, v.Alamat, v.Pekerjaan, v.Alasan)
 	}
 
-	// index, _ := strconv.Atoi(os.Args[1])
-	// fmt.Println(listData[index])
+	index, _ := strconv.Atoi(os.Args[1])
+	fmt.Println(listData[index])
 }

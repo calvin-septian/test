@@ -16,6 +16,8 @@ import (
 func main() {
 	fmt.Println("Hello World!")
 
+	helper.ConnectDB()
+
 	for i := 0; i < 10; i++ {
 		if i%2 != 0 {
 			fmt.Printf("angka %d ganjil\n", i)
@@ -26,8 +28,11 @@ func main() {
 
 	name := []string{"andi", "budi", "cacing"}
 	for _, v := range name {
-		fmt.Printf("nama saya %s\n", v)
+		go func(nama string) {
+			fmt.Printf("nama saya %s\n", nama)
+		}(v)
 	}
+	time.Sleep(1 * time.Second)
 
 	helper.GetBiodata()
 

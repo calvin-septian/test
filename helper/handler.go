@@ -1,14 +1,24 @@
 package helper
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
 	"training/entity"
 
+	_ "github.com/denisenkom/go-mssqldb"
 	"github.com/gorilla/mux"
 )
+
+// Global app context
+type applicationContext struct {
+	mssql *SQLServer
+}
+
+//Context type helper
+var Context applicationContext
 
 var listUser = map[string]entity.User{
 	"2": {
@@ -51,17 +61,31 @@ func UsersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getUsersByIDHandler(w http.ResponseWriter, r *http.Request, id string) {
+	var result []byte
 	if v, ok := listUser[id]; ok {
 		w.Header().Add("Content-Type", "application/json")
-		json, _ := json.Marshal(v)
-		w.Write(json)
+		result, _ = json.Marshal(v)
+		w.Write(result)
+	}
+
+	list := Context.mssql.GetAllUser(context.Background())
+	for _, v := range list {
+		if id == fmt.Sprint(v.Id) {
+			w.Header().Add("Content-Type", "application/json")
+			result, _ = json.Marshal(v)
+			w.Write(result)
+		}
 	}
 }
 
 func getUsersHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
-	json, _ := json.Marshal(listUser)
-	w.Write(json)
+	result, _ := json.Marshal(listUser)
+	w.Write(result)
+
+	list := Context.mssql.GetAllUser(context.Background())
+	result, _ = json.Marshal(list)
+	w.Write(result)
 }
 
 func createUsersHandler(w http.ResponseWriter, r *http.Request) {
@@ -76,6 +100,9 @@ func createUsersHandler(w http.ResponseWriter, r *http.Request) {
 		listUser[fmt.Sprint(user.Id)] = user
 		w.Write([]byte("success create user"))
 	}
+
+	Context.mssql.AddUser(context.Background(), user)
+
 }
 
 func updateUserHandler(w http.ResponseWriter, r *http.Request, id string) {
@@ -92,6 +119,8 @@ func updateUserHandler(w http.ResponseWriter, r *http.Request, id string) {
 	} else {
 		w.Write([]byte("user not found"))
 	}
+
+	Context.mssql.AddUser(context.Background(), user)
 }
 
 func deleteUserHandler(w http.ResponseWriter, r *http.Request, id string) {
@@ -101,4 +130,11 @@ func deleteUserHandler(w http.ResponseWriter, r *http.Request, id string) {
 	} else {
 		w.Write([]byte("user not found"))
 	}
+
+	Context.mssql.DeleteUser(context.Background(), id)
+}
+
+func ConnectDB() {
+	sql := NewSQLConnection()
+	Context.mssql = sql
 }
