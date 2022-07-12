@@ -8,7 +8,7 @@ import (
 )
 
 func (s *SQLServer) GetAllUser(ctx context.Context) []entity.User {
-	rows, err := s.LocalDB.QueryContext(context.Background(), "GetUser")
+	rows, err := s.LocalDB.QueryContext(ctx, "GetUser")
 	if err != nil {
 		fmt.Println("error: ", err)
 	}
@@ -37,7 +37,7 @@ func (s *SQLServer) GetAllUser(ctx context.Context) []entity.User {
 }
 
 func (s *SQLServer) AddUser(ctx context.Context, data entity.User) {
-	_, err := s.LocalDB.ExecContext(context.Background(), "AddUser",
+	_, err := s.LocalDB.ExecContext(ctx, "AddUser",
 		sql.Named("Id", data.Id),
 		sql.Named("Username", data.Username),
 		sql.Named("Email", data.Email),
@@ -51,7 +51,7 @@ func (s *SQLServer) AddUser(ctx context.Context, data entity.User) {
 }
 
 func (s *SQLServer) DeleteUser(ctx context.Context, id string) {
-	_, err := s.LocalDB.ExecContext(context.Background(), "DeleteUser",
+	_, err := s.LocalDB.ExecContext(ctx, "DeleteUser",
 		sql.Named("Id", id))
 	if err != nil {
 		fmt.Println("error: ", err)
