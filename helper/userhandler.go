@@ -57,3 +57,36 @@ func (s *SQLServer) DeleteUser(ctx context.Context, id string) {
 		fmt.Println("error: ", err)
 	}
 }
+
+func (s *SQLServer) Register(ctx context.Context, data entity.UserLogin) {
+	_, err := s.LocalDB.Exec("insert into [UserLogin] (Username, Password) values (@Username, @Password)",
+		sql.Named("Username", data.Username),
+		sql.Named("Password", data.Password))
+	if err != nil {
+		fmt.Println("error: ", err)
+	}
+}
+
+func (s *SQLServer) GetAllUserLogin(ctx context.Context) []entity.UserLogin {
+	rows, err := s.LocalDB.Query("select Username, Password from [UserLogin]")
+	if err != nil {
+		fmt.Println("error: ", err)
+	}
+	defer rows.Close()
+
+	var result []entity.UserLogin
+	for rows.Next() {
+		data := entity.UserLogin{}
+
+		err := rows.Scan(
+			&data.Username,
+			&data.Password)
+		if err != nil {
+			fmt.Printf("[mssql] Failed reading rows: %v", err)
+		}
+
+		result = append(result, data)
+	}
+
+	return result
+}

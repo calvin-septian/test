@@ -4,6 +4,10 @@ import (
 	"bytes"
 	"io/ioutil"
 	"net/http"
+	"time"
+	"training/entity"
+
+	jwt "github.com/golang-jwt/jwt/v4"
 )
 
 // Global app context
@@ -12,7 +16,10 @@ type applicationContext struct {
 }
 
 //Context type helper
-var Context applicationContext
+var (
+	Context applicationContext
+	jwtKey  = []byte("test_jwt")
+)
 
 func ConnectDB() {
 	sql := NewSQLConnection()
@@ -40,4 +47,21 @@ func requestHttp(url, method string, body []byte) ([]byte, error) {
 	}
 
 	return data, nil
+}
+
+func GenerateJWT(Username string) (string, error) {
+	tokenMethod := jwt.SigningMethodHS256
+	claims := entity.Claims{
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(5 * time.Minute).Unix(),
+		},
+		Username: Username,
+	}
+	token := jwt.NewWithClaims(tokenMethod, claims)
+	tokenString, err := token.SignedString(jwtKey)
+
+	if err != nil {
+		return "", err
+	}
+	return tokenString, nil
 }

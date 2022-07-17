@@ -32,7 +32,7 @@ func main() {
 	}
 	time.Sleep(1 * time.Second)
 
-	helper.GetBiodata()
+	// helper.GetBiodata()
 
 	r := mux.NewRouter()
 	r.HandleFunc("/hello", helper.Hello)
@@ -42,6 +42,8 @@ func main() {
 	r.HandleFunc("/orders", helper.OrdersHandler)
 	r.HandleFunc("/orders/{orderId}", helper.OrdersHandler)
 	r.Handle("/userurl", helper.Middleware(http.HandlerFunc(helper.GetUserUrl)))
+	r.HandleFunc("/newregister", helper.UserRegisterHandler)
+	r.HandleFunc("/login", helper.UserLoginHandler)
 	srv := &http.Server{
 		Handler: r,
 		Addr:    "127.0.0.1:8090",

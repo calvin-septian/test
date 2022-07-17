@@ -11,6 +11,7 @@ import (
 
 	_ "github.com/denisenkom/go-mssqldb"
 	"github.com/gorilla/mux"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var listUser = map[string]entity.User{
@@ -281,4 +282,56 @@ func GetUserUrl(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Add("Content-Type", "application/json")
 	w.Write(userData)
+}
+
+func UserRegisterHandler(w http.ResponseWriter, r *http.Request) {
+	var user entity.UserLogin
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		w.Write([]byte("error decoding json body"))
+		return
+	}
+
+	pass := []byte(user.Password)
+
+	bcrypthash, err := bcrypt.GenerateFromPassword(pass, bcrypt.DefaultCost)
+	if err != nil {
+		w.Write([]byte(err.Error()))
+		return
+	}
+	user.Password = string(bcrypthash)
+	fmt.Println(user.Password)
+
+	Context.mssql.Register(context.Background(), user)
+}
+
+func UserLoginHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Content-Type", "application/json")
+
+	var user entity.User
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		w.Write([]byte("error decoding json body"))
+		return
+	}
+
+	list := Context.mssql.GetAllUserLogin(context.Background())
+	for _, v := range list {
+		if user.Username == v.Username {
+			err = bcrypt.CompareHashAndPassword([]byte(v.Password), []byte(user.Password))
+			if err != nil {
+				w.Write([]byte(err.Error()))
+				return
+			}
+
+			tokenString, err := GenerateJWT(v.Username)
+			if err != nil {
+				w.Write([]byte(err.Error()))
+				return
+			}
+
+			result, _ := json.Marshal(tokenString)
+			w.Write(result)
+		}
+	}
 }
