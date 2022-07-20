@@ -3,6 +3,7 @@ package helper
 import (
 	"bytes"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"time"
 	"training/entity"
@@ -64,4 +65,9 @@ func GenerateJWT(Username string) (string, error) {
 		return "", err
 	}
 	return tokenString, nil
+}
+
+func GetRandomNumber(min, max int) int {
+	num := rand.Intn(max-min) + min
+	return num
 }

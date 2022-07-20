@@ -231,11 +231,6 @@ func deleteOrderHandler(w http.ResponseWriter, r *http.Request, orderId string) 
 }
 
 func GetUserUrl(w http.ResponseWriter, r *http.Request) {
-	url := "https://random-data-api.com/api/users/random_user?size=10"
-	var result []map[string]interface{}
-	res, _ := requestHttp(url, "GET", []byte(""))
-	_ = json.Unmarshal(res, &result)
-
 	type data struct {
 		Id         float64 `json:"id"`
 		Uid        string  `json:"uid"`
@@ -255,28 +250,13 @@ func GetUserUrl(w http.ResponseWriter, r *http.Request) {
 			} `json:"coordinates"`
 		} `json:"address"`
 	}
-	var listdata []data
+	url := "https://random-data-api.com/api/users/random_user?size=10"
 
-	for _, v := range result {
-		data := data{}
-		data.Id = v["id"].(float64)
-		data.Uid = v["uid"].(string)
-		data.First_name = v["first_name"].(string)
-		data.Last_name = v["last_name"].(string)
-		data.Username = v["username"].(string)
-		address := v["address"].(map[string]interface{})
-		coordinates := address["coordinates"].(map[string]interface{})
-		data.Address.City = address["city"].(string)
-		data.Address.Street_name = address["street_name"].(string)
-		data.Address.Street_address = address["street_address"].(string)
-		data.Address.Zip_code = address["zip_code"].(string)
-		data.Address.State = address["state"].(string)
-		data.Address.Country = address["country"].(string)
-		data.Address.Coordinates.Lat = coordinates["lat"].(float64)
-		data.Address.Coordinates.Lng = coordinates["lng"].(float64)
-		listdata = append(listdata, data)
-	}
-	userData, err := json.Marshal(listdata)
+	var result []data
+	res, _ := requestHttp(url, "GET", []byte(""))
+	_ = json.Unmarshal(res, &result)
+
+	userData, err := json.Marshal(result)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -331,6 +311,7 @@ func UserLoginHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			result, _ := json.Marshal(tokenString)
+
 			w.Write(result)
 		}
 	}
