@@ -1,10 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
+	"io/ioutil"
 	"net/http"
-	"sync"
 	"time"
 
 	"training/helper"
@@ -13,18 +14,25 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var list sync.Map
-
 type Status struct {
-	Water int `json:"Water"`
-	Wind  int `json:"Wind"`
+	Status struct {
+		Water int `json:"Water"`
+		Wind  int `json:"Wind"`
+	} `json:"Status"`
 }
 
 func (status Status) Run() {
 	status = Status{}
-	status.Water = helper.GetRandomNumber(1, 100)
-	status.Wind = helper.GetRandomNumber(1, 100)
-	list.Store("Status", status)
+	status.Status.Water = helper.GetRandomNumber(1, 100)
+	status.Status.Wind = helper.GetRandomNumber(1, 100)
+	value, err := json.Marshal(status)
+	if err != nil {
+		fmt.Println(err)
+	}
+	err = ioutil.WriteFile("status.json", value, 0644)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func main() {
@@ -72,32 +80,34 @@ func main() {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 			}
 			var resultValue string
-			list.Range(func(key, value interface{}) bool {
-				isValid := false
-				if key.(string) == "Status" {
-					status := value.(Status)
-					var StatusWater, StatusWind string
-					if status.Water < 5 {
-						StatusWater = "aman"
-					} else if status.Water > 5 && status.Water < 9 {
-						StatusWater = "siaga"
-					} else {
-						StatusWater = "bahaya"
-					}
+			value, err := ioutil.ReadFile("status.json")
+			if err != nil {
+				fmt.Println(err)
+			}
+			status := Status{}
+			err = json.Unmarshal(value, &status)
+			if err != nil {
+				fmt.Println(err)
+			}
 
-					if status.Wind < 6 {
-						StatusWind = "aman"
-					} else if status.Wind > 6 && status.Wind < 16 {
-						StatusWind = "siaga"
-					} else {
-						StatusWind = "bahaya"
-					}
+			var StatusWater, StatusWind string
+			if status.Status.Water < 5 {
+				StatusWater = "aman"
+			} else if status.Status.Water > 5 && status.Status.Water < 9 {
+				StatusWater = "siaga"
+			} else {
+				StatusWater = "bahaya"
+			}
 
-					resultValue = fmt.Sprintf("StatusWater : %s (%dm)\n StatusWind : %s (%dm/s)", StatusWater, status.Water, StatusWind, status.Wind)
-					isValid = true
-				}
-				return isValid
-			})
+			if status.Status.Wind < 6 {
+				StatusWind = "aman"
+			} else if status.Status.Wind > 6 && status.Status.Wind < 16 {
+				StatusWind = "siaga"
+			} else {
+				StatusWind = "bahaya"
+			}
+
+			resultValue = fmt.Sprintf("StatusWater : %s (%dm)\n StatusWind : %s (%dm/s)", StatusWater, status.Status.Water, StatusWind, status.Status.Wind)
 
 			tpl.Execute(w, resultValue)
 			return
