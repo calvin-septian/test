@@ -1,42 +1,40 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"html/template"
 	"io/ioutil"
 	"net/http"
 	"time"
 
 	"training/helper"
+	"training/weather"
 
-	"github.com/bamzi/jobrunner"
 	"github.com/gorilla/mux"
+	"gopkg.in/yaml.v2"
+
+	flag "github.com/spf13/pflag"
 )
 
-type Status struct {
-	Status struct {
-		Water int `json:"Water"`
-		Wind  int `json:"Wind"`
-	} `json:"Status"`
+type options struct {
+	configFilename string
 }
 
-func (status Status) Run() {
-	status = Status{}
-	status.Status.Water = helper.GetRandomNumber(1, 100)
-	status.Status.Wind = helper.GetRandomNumber(1, 100)
-	value, err := json.Marshal(status)
-	if err != nil {
-		fmt.Println(err)
-	}
-	err = ioutil.WriteFile("status.json", value, 0644)
-	if err != nil {
-		fmt.Println(err)
-	}
+type configuration struct {
+	Username string `yaml:"username"`
 }
+
+var config = configuration{}
 
 func main() {
 	fmt.Println("Hello World!")
+
+	args := loadOptions()
+	err := parseConfig(args.configFilename)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println(config.Username)
 
 	helper.ConnectDB()
 	defer helper.CloseConnectionDB()
@@ -59,10 +57,6 @@ func main() {
 
 	// helper.GetBiodata()
 
-	jobrunner.Start()
-	jobrunner.Now(Status{})
-	jobrunner.Every(15*time.Second, Status{})
-
 	r := mux.NewRouter()
 	r.HandleFunc("/hello", helper.Hello)
 	r.HandleFunc("/register", helper.Register)
@@ -73,50 +67,37 @@ func main() {
 	r.Handle("/userurl", helper.Middleware(http.HandlerFunc(helper.GetUserUrl)))
 	r.HandleFunc("/newregister", helper.UserRegisterHandler)
 	r.HandleFunc("/login", helper.UserLoginHandler)
-	r.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "GET" {
-			tpl, err := template.ParseFiles("template.html")
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-			}
-			var resultValue string
-			value, err := ioutil.ReadFile("status.json")
-			if err != nil {
-				fmt.Println(err)
-			}
-			status := Status{}
-			err = json.Unmarshal(value, &status)
-			if err != nil {
-				fmt.Println(err)
-			}
-
-			var StatusWater, StatusWind string
-			if status.Status.Water < 5 {
-				StatusWater = "aman"
-			} else if status.Status.Water > 5 && status.Status.Water < 9 {
-				StatusWater = "siaga"
-			} else {
-				StatusWater = "bahaya"
-			}
-
-			if status.Status.Wind < 6 {
-				StatusWind = "aman"
-			} else if status.Status.Wind > 6 && status.Status.Wind < 16 {
-				StatusWind = "siaga"
-			} else {
-				StatusWind = "bahaya"
-			}
-
-			resultValue = fmt.Sprintf("StatusWater : %s (%dm)\n StatusWind : %s (%dm/s)", StatusWater, status.Status.Water, StatusWind, status.Status.Wind)
-
-			tpl.Execute(w, resultValue)
-			return
-		}
-		http.Error(w, "Invalid Method", http.StatusBadRequest)
-	})
+	r.HandleFunc("/status", weather.Status)
 	srv := &http.Server{
 		Handler: r,
 		Addr:    "127.0.0.1:8090",
 	}
 	srv.ListenAndServe()
+}
+
+func loadOptions() options {
+	o := options{}
+
+	flag.StringVar(&o.configFilename, "config", "", "Path to the config files")
+
+	flag.CommandLine.SortFlags = false
+
+	flag.Parse()
+
+	return o
+}
+
+func parseConfig(configFile string) error {
+
+	yamlFile, err := ioutil.ReadFile(configFile)
+	if err != nil {
+		fmt.Printf("yamlFile.Get err   #%v ", err)
+	}
+	err = yaml.Unmarshal(yamlFile, &config)
+	if err != nil {
+		fmt.Printf("Unmarshal: %v", err)
+		return err
+	}
+
+	return nil
 }
